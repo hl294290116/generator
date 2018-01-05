@@ -1,0 +1,85 @@
+import time
+state = [
+    [8,0,0,0,0,0,0,0,0],
+    [0,0,3,6,0,0,0,0,0],
+    [0,7,0,0,9,0,2,0,0],
+    [0,5,0,0,0,7,0,0,0],
+    [0,0,0,8,4,5,7,0,0],
+    [0,0,0,1,0,0,0,3,0],
+    [0,0,1,0,0,0,0,6,8],
+    [0,0,8,5,0,0,0,1,0],
+    [0,9,0,0,0,0,4,0,0]]
+set_list = []# 定义一个列表 记录 已经添加的位置
+count = 0    #定义变量来记录运行次数
+
+
+def conflict(state, num, args):# 定义冲突 来判定 当前环境 state 经过 action（添加 num） 之后 是否 符合要求 符合 返回 False 即 无冲突
+    global is_full
+    row, column = args
+    if num in state[row]:
+        return True
+    if num in [x[column] for x in state]:
+        return True
+    #(0,3)(3,6)(6,9)判断 row 以及 column 所在区间
+    # a = (row // 3 * 3, row//3 * 3 + 3)
+    # b = (column // 3 * 3, column//3 *3 + 3)
+    for x in range(row // 3 * 3, row//3 * 3 + 3):
+        for y in range(column // 3 * 3, column//3 *3 + 3):
+            if num == state[x][y]:
+                return True
+    else:
+        return False
+
+
+def add_num(state, args):# 定义一个函数 action 对当前 state操作 args 表示操作的具体 位置信息
+    global is_full, set_list, count
+    row, column = args
+    #判断此时位置L的值 若为0： 则遍历 （1,9） 满足条件 添加下一位置的值，将state 与 L值 传入 函数
+
+    if state[row][column] == 0:#该位置 为 0  遍历可以添加的值
+        for num in range(1,10):
+            if not conflict(state,num, (row, column)):# 符合
+                count += 1    # count +1
+                set_list.append((row, column))# 记录 更改的位置
+                state[row][column] = num
+                # print(set_list)
+                # print(state)
+                # time.sleep(0.01)
+                #如果满足 条件 判断 列： 是否 换行， 递归
+                if column < 8:
+                    add_num(state, (row,column + 1))
+                elif column == 8:
+                    add_num(state, (row+1, 0))
+        if set_list: # 回溯  判断是否为空 防止 报错
+            s = set_list.pop()  # 删除并取值
+            state[s[0]][s[1]] = 0 # 并还原 更改   回到上一步
+
+
+        # state[row][column] = 0
+    # L位置值 不是0 则 判断是否换行 下一位置
+    elif column < 8:
+        add_num(state, (row, column + 1))
+    elif column == 8:
+        add_num(state, (row + 1, 0))
+start = time.clock()
+try:
+    add_num(state, (0,0))
+except:
+        print(state)
+        print(set_list)
+else:
+    print("该九宫格没有答案")
+end = time.clock()
+print("总共用时：%s" % (end - start))
+print(count)
+# print(set_list)
+# 最终结果为：
+# [[8, 1, 2, 7, 5, 3, 6, 4, 9],
+#  [9, 4, 3, 6, 8, 2, 1, 7, 5],
+#  [6, 7, 5, 4, 9, 1, 2, 8, 3],
+#  [1, 5, 4, 2, 3, 7, 8, 9, 6],
+#  [3, 6, 9, 8, 4, 5, 7, 2, 1],
+#  [2, 8, 7, 1, 6, 9, 5, 3, 4],
+#  [5, 2, 1, 9, 7, 4, 3, 6, 8],
+#  [4, 3, 8, 5, 2, 6, 9, 1, 7],
+#  [7, 9, 6, 3, 1, 8, 4, 5, 2]]
